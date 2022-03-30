@@ -24,11 +24,13 @@ app.use(
     extended: true,
   })
 );
+
 // set the view engine to ejs
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
-
 app.use("/static", express.static("static/"));
+
+
 
 // use res.render to load up an ejs view file
 // index page
@@ -49,6 +51,10 @@ app.get("/dashboard", authMiddleware, async function (req, res) {
   res.render("pages/dashboard", { user: req.user, feed });
 });
 
+// app.get("/afterlogin", function (req, res) {
+//     res.render("pages/afterlogin");
+// });
+
 app.post("/sessionLogin", async (req, res) => {
   const idToken = req.body.idToken;
   const expiresIn = 60 * 60 * 24 * 5 * 1000;
@@ -56,7 +62,7 @@ app.post("/sessionLogin", async (req, res) => {
   admin.auth().createSessionCookie(idToken, { expiresIn })
     .then(
       sessionCookie => {
-        const options = { maxAge: expiresIn, httpOnly: true };
+        const options = { maxAge: expiresIn, httpOnly: true};
         res.cookie("session", sessionCookie, options);
         res.status(200).send(JSON.stringify({ status: "success" }));
       },

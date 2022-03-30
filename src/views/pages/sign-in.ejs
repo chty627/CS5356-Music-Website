@@ -55,13 +55,13 @@
 
   window.onload = () => {
     const firebaseConfig = {
-      apiKey: "AIzaSyCVAmfcF2-XxXnMirbGBH0ixDW7fZ8HVz0",
-      authDomain: "cs5356-hw1-jf677.firebaseapp.com",
-      projectId: "cs5356-hw1-jf677",
-      storageBucket: "cs5356-hw1-jf677.appspot.com",
-      messagingSenderId: "916957610227",
-      appId: "1:916957610227:web:9012db35780deb7f843786",
-      measurementId: "G-48YHZD33VJ"
+      apiKey: "AIzaSyDBXU3lgKNUIbd69jrRCPWCCxkU5c8DXLY",
+      authDomain: "milestoneproject-cs5356.firebaseapp.com",
+      projectId: "milestoneproject-cs5356",
+      storageBucket: "milestoneproject-cs5356.appspot.com",
+      messagingSenderId: "494356475504",
+      appId: "1:494356475504:web:e3092d568c9a52301e4eb5",
+      measurementId: "G-VF2ZK8QNFP"
     };
 
     const app = firebase.initializeApp(firebaseConfig);
@@ -88,7 +88,7 @@
                       body: JSON.stringify({ idToken })
                     }).then(() => {
                       window.location.href = '/dashboard'
-                    })
+                    });
                   })
                 })
                 .catch((error) => (function(error) {

@@ -15,7 +15,8 @@ module.exports = (req, res, next) => {
         next();
       })
       .catch(error => {
-        res.redirect("/sign-in");
+          console.log(error);
+          res.redirect("/sign-in");
       });
   }
 };

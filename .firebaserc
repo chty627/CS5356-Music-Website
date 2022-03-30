@@ -1,6 +1,7 @@
 {
   "projects": {
-    "default": "milestoneproject-cs5356"
+    "default": "milestoneproject-cs5356",
+    "music": "milestoneproject-cs5356"
   },
   "targets": {}
 }
