@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <link rel="stylesheet" type="text/css" href="../../../static/login.css">
+  <%- include('../partials/head') %>
+</head>
+
+<body>
+  <header>
+    <%- include('../partials/nav', { hideSignIn: true }) %>
+  </header>
+
+  <section class="hero is-fullheight">
+    <div class="hero-body has-text-centered">
+      <div class="login">
+        <form id="login-form">
+          <legend>Ruff House</legend>
+          <div class="field">
+            <div class="control">
+              <input class="input is-medium is-rounded" name="login"  type="email" placeholder="hello@example.com" autocomplete="username" required />
+            </div>
+          </div>
+          <div class="field">
+            <div class="control">
+              <input class="input is-medium is-rounded" name="password"  type="password" placeholder="**********" autocomplete="current-password" required />
+            </div>
+          </div>
+          <br />
+          <button class="button is-block is-fullwidth is-primary is-medium is-rounded" type="submit">
+            Login
+          </button>
+        </form>
+        <br>
+        <nav class="level">
+          <div class="level-item has-text-centered">
+            <div>
+              <a href="/sign-up">Create an Account</a>
+            </div>
+          </div>
+        </nav>
+
+      </div>
+    </div>
+  </section>
+
+</body>
+
+
+
+<script src="https://www.gstatic.com/firebasejs/9.6.4/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.4/firebase-auth-compat.js"></script>
+
+<script>
+
+  window.onload = () => {
+    const firebaseConfig = {
+      apiKey: "AIzaSyDBXU3lgKNUIbd69jrRCPWCCxkU5c8DXLY",
+      authDomain: "milestoneproject-cs5356.firebaseapp.com",
+      projectId: "milestoneproject-cs5356",
+      storageBucket: "milestoneproject-cs5356.appspot.com",
+      messagingSenderId: "494356475504",
+      appId: "1:494356475504:web:e3092d568c9a52301e4eb5",
+      measurementId: "G-VF2ZK8QNFP"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth(app);
+
+    app.auth().setPersistence(firebase.auth.Auth.Persistence.NONE);
+
+    document
+      .getElementById("login-form")
+      .addEventListener("submit", (event) => {
+        event.preventDefault();
+        const login = event.target.login.value;
+        const password = event.target.password.value;
+
+        auth.signInWithEmailAndPassword(login, password)
+                .then((userCredential) => {
+                  // Signed in
+                  const user = userCredential.user;
+
+                  user.getIdToken().then((idToken) => {
+                    fetch('/sessionLogin', {
+                      method: 'POST',
+                      headers: {'Content-Type': 'application/json'},
+                      body: JSON.stringify({ idToken })
+                    }).then(() => {
+                      window.location.href = '/dashboard'
+                    });
+                  })
+                })
+                .catch((error) => (function(error) {
+                  const errorCode = error.code;
+                  const errorMessage = error.message;
+                }));
+      });
+  };
+</script>
+
+</html>
