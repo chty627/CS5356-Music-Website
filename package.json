@@ -19,7 +19,9 @@
     "express": "^4.17.2",
     "firebase-admin": "^10.0.2",
     "firebase-functions": "^3.18.0",
-    "nodemon": "^2.0.15"
+    "nodemon": "^2.0.15",
+    "postcss-cli": "^9.1.0",
+    "tailwind": "^4.0.0"
   },
   "devDependencies": {
     "cypress": "^9.3.1"

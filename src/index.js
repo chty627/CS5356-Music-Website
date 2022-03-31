@@ -3,6 +3,7 @@ const path = require("path");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const admin = require("firebase-admin");
+const fetch = require('node-fetch');
 const app = express();
 const port = process.env.PORT || 8080;
 
@@ -34,8 +35,20 @@ app.use("/static", express.static("static/"));
 
 // use res.render to load up an ejs view file
 // index page
-app.get("/", function (req, res) {
-  res.render("pages/index");
+app.get("/", async function (req, res) {
+  const url = 'https://shazam.p.rapidapi.com/songs/list-recommendations?key=484129036&locale=en-US';
+  const options = {
+    method: 'GET',
+    headers: {
+      'X-RapidAPI-Host': 'shazam.p.rapidapi.com',
+      'X-RapidAPI-Key': '577dc0b40bmsh6ea6fa79b9105aep161387jsn5ee36599a5f6'
+    }
+  };
+  const message = await fetch(url, options);
+  const m = await message.json();
+  const music = Object.values(m.tracks);
+  res.render("pages/index", { data: music });
+  
 });
 
 app.get("/sign-in", function (req, res) {
@@ -47,8 +60,19 @@ app.get("/sign-up", function (req, res) {
 });
 
 app.get("/dashboard", authMiddleware, async function (req, res) {
-  const feed = await userFeed.get();
-  res.render("pages/dashboard", { user: req.user, feed });
+  const url = 'https://shazam.p.rapidapi.com/songs/list-artist-top-tracks?id=40008598&locale=en-US';
+  const options = {
+    method: 'GET',
+    headers: {
+      'X-RapidAPI-Host': 'shazam.p.rapidapi.com',
+      'X-RapidAPI-Key': '577dc0b40bmsh6ea6fa79b9105aep161387jsn5ee36599a5f6'
+    }
+  };
+  const message = await fetch(url, options);
+  const m = await message.json();
+  const music = Object.values(m.tracks);
+  // console.log(music);
+  res.render("pages/dashboard", { data : music });
 });
 
 // app.get("/afterlogin", function (req, res) {
@@ -88,8 +112,8 @@ app.post("/dog-messages", authMiddleware, async (req, res) => {
 // Create and Deploy Your First Cloud Functions
 // https://firebase.google.com/docs/functions/write-firebase-functions
 
-exports.helloWorld = functions.https.onRequest(app);
+// exports.helloWorld = functions.https.onRequest(app);
 
 
-// app.listen(port);
+app.listen(port);
 console.log("Server started at http://localhost:" + port);

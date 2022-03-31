@@ -1,37 +1,22 @@
-<nav class="navbar">
-  <div class="container">
-    <div class="navbar-brand">
-      <a class="navbar-item" href="/">
-        <figure class="image">
-          <img src="../../../static/doglogo.png" alt="Logo">
-        </figure>
-      </a>
-      <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarMenu">
-        <span aria-hidden="true"></span>
-        <span aria-hidden="true"></span>
-        <span aria-hidden="true"></span>
-      </a>
-    </div>
-
-    <% if(locals.email) { %>
-      <div id="navbarMenu" class="navbar-menu">
-        <div class="navbar-end">
-          <a href="/dashboard" class="navbar-item">
-            <%= email %>
-              <i class="material-icons">person_outline</i>
-          </a>
-        </div>
+<div class="relative bg-yellow-300">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6">
+    <div class="flex justify-between items-center py-6 md:justify-start md:space-x-10">
+      <div class="flex justify-start lg:w-0 lg:flex-1">
+        <a href="/" class="font-bold text-orange-50 hover:text-rose-500 hover:font-extrabold">
+          <span class="sr-only">Musics</span>
+          <i class="fa-solid fa-music"> M U S I C</i>
+        </a>
       </div>
-      <% } else if(locals.hideSignIn) { %>
-      <% } else { %>
-        <div id="navbarMenu" class="navbar-menu">
-          <div class="navbar-end">
-            <div class="navbar-item">
-              <a href="/sign-in" class="button is-primary">Sign In
-              </a>
-            </div>
-          </div>
-        </div>
-      <% }%>
+      <nav class="hidden md:flex space-x-10">
+        <a href="/dashboard" class="text-base font-bold text-orange-50 hover:text-rose-500 hover:font-extrabold"> My Song </a>
+        <a href="#" class="text-base font-bold text-orange-50 hover:text-rose-500 hover:font-extrabold"> Search </a>
+      </nav>
+      <div class="hidden md:flex items-center justify-end md:flex-1 lg:w-0">
+        <a href="/sign-in" class="ml-8 whitespace-nowrap inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base bg-amber-500 font-bold text-orange-50 hover:text-rose-500 hover:font-extrabold"> Sign in </a>
+        <a href="/sign-up" class="ml-8 whitespace-nowrap inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base bg-amber-500 font-bold text-orange-50 hover:text-rose-500 hover:font-extrabold"> Sign up </a>
+        <a href="/sessionLogout" class="ml-8 whitespace-nowrap inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base bg-amber-500 font-bold text-orange-50 hover:text-rose-500 hover:font-extrabold"> Sign out </a>
+      </div>
+
+    </div>
   </div>
-</nav>
+</div>
