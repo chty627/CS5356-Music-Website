@@ -13,6 +13,9 @@ const authMiddleware = require("./app/auth-middleware");
 
 const functions = require("firebase-functions");
 
+const { initializeApp, applicationDefault, cert } = require('firebase-admin/app');
+const { getFirestore, Timestamp, FieldValue } = require('firebase-admin/firestore');
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
@@ -38,17 +41,29 @@ app.use("/static", express.static("static/"));
 app.get("/", async function (req, res) {
   const url = 'https://shazam.p.rapidapi.com/songs/list-recommendations?key=484129036&locale=en-US';
   const options = {
-    method: 'GET',
-    headers: {
-      'X-RapidAPI-Host': 'shazam.p.rapidapi.com',
-      'X-RapidAPI-Key': '577dc0b40bmsh6ea6fa79b9105aep161387jsn5ee36599a5f6'
-    }
-  };
+      method: 'GET',
+      headers: {
+        'X-RapidAPI-Host': 'shazam.p.rapidapi.com',
+        'X-RapidAPI-Key': '577dc0b40bmsh6ea6fa79b9105aep161387jsn5ee36599a5f6'
+      }
+    };
   const message = await fetch(url, options);
   const m = await message.json();
-  const music = Object.values(m.tracks);
-  res.render("pages/index", { data: music });
-  
+  const musics = Object.values(m.tracks);
+
+  const db = admin.firestore();
+  const user = await admin.auth().verifySessionCookie(req.cookies.session, true);
+  if(user){
+    const email = user.email;
+    var music_user = db.collection('users').doc(email);
+    const data_for_user = await music_user.get();
+    const music_for_user = data_for_user.data().musics;
+    // add heart
+    for(var i = 0; i < musics.length; i++){
+      musics[i]["heart"] =  music_for_user.includes(musics[i].key);
+    }
+  }
+  res.render("pages/index", { data: musics });
 });
 
 app.get("/sign-in", function (req, res) {
@@ -60,19 +75,46 @@ app.get("/sign-up", function (req, res) {
 });
 
 app.get("/dashboard", authMiddleware, async function (req, res) {
-  const url = 'https://shazam.p.rapidapi.com/songs/list-artist-top-tracks?id=40008598&locale=en-US';
+
+  const url = 'https://shazam.p.rapidapi.com/songs/list-recommendations?key=484129036&locale=en-US';
   const options = {
-    method: 'GET',
-    headers: {
-      'X-RapidAPI-Host': 'shazam.p.rapidapi.com',
-      'X-RapidAPI-Key': '577dc0b40bmsh6ea6fa79b9105aep161387jsn5ee36599a5f6'
-    }
-  };
+      method: 'GET',
+      headers: {
+        'X-RapidAPI-Host': 'shazam.p.rapidapi.com',
+        'X-RapidAPI-Key': '577dc0b40bmsh6ea6fa79b9105aep161387jsn5ee36599a5f6'
+      }
+    };
   const message = await fetch(url, options);
   const m = await message.json();
-  const music = Object.values(m.tracks);
+  const musics = Object.values(m.tracks);
+
+  // const url = 'https://shazam.p.rapidapi.com/songs/list-artist-top-tracks?id=40008598&locale=en-US';
+  // const options = {
+  //   method: 'GET',
+  //   headers: {
+  //     'X-RapidAPI-Host': 'shazam.p.rapidapi.com',
+  //     'X-RapidAPI-Key': '577dc0b40bmsh6ea6fa79b9105aep161387jsn5ee36599a5f6'
+  //   }
+  // };
+  // const message = await fetch(url, options);
+  // const m = await message.json();
+  // const music = Object.values(m.tracks);
   // console.log(music);
-  res.render("pages/dashboard", { data : music });
+  const db = admin.firestore();
+  const user = await admin.auth().verifySessionCookie(req.cookies.session, true);
+  const email = user.email;
+  var music_user = db.collection('users').doc(email);
+  const data_for_user = await music_user.get();
+  const music_for_user = data_for_user.data().musics;
+
+  var filtered = musics.filter(function(value, index, arr){ 
+    return music_for_user.includes(value.key);
+  });
+  // add heart
+  for(var i = 0; i < filtered.length; i++){
+    filtered[i]["heart"] = true;
+  }
+  res.render("pages/dashboard", { data : filtered });
 });
 
 // app.get("/afterlogin", function (req, res) {
@@ -89,6 +131,7 @@ app.post("/sessionLogin", async (req, res) => {
         const options = { maxAge: expiresIn, httpOnly: true};
         res.cookie("session", sessionCookie, options);
         res.status(200).send(JSON.stringify({ status: "success" }));
+        
       },
       (error) => {
         res.status(401).send(error.toString());
@@ -107,6 +150,32 @@ app.post("/dog-messages", authMiddleware, async (req, res) => {
   res.redirect("/dashboard");
 });
 
+
+app.post("/setHeart", async (req, res) => {
+  const db = admin.firestore();
+  const music = req.body.music;
+  const heart = req.body.heart;
+  const user = await admin.auth().verifySessionCookie(req.cookies.session, true);
+  if(user){
+    const email = user.email;
+    var music_user = db.collection('users').doc(email);
+    music_user.update({email: email});
+    var h = parseInt(heart);
+    if(h){
+      console.log("enter true");
+      music_user.update({
+        musics: FieldValue.arrayRemove(music)
+    });
+    }
+    else{
+      console.log("enter false");
+      music_user.update({
+        musics: FieldValue.arrayUnion(music)
+    });
+    }
+    
+  }
+});
 
 
 // Create and Deploy Your First Cloud Functions
