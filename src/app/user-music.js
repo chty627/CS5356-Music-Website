@@ -50,8 +50,16 @@ const get_user = async(user_list) =>{
     return musics_for_user;
 }
 
+const get_album = async(album) => {
+    if (Object.keys(musics).length === 0) {
+        await get();
+    }
+    return musics[album];
+}
+
 module.exports = {
   get,
   userlist,
   get_user,
+  get_album,
 };

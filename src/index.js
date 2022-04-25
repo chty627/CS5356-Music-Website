@@ -129,15 +129,20 @@ app.post("/setHeart", async (req, res) => {
     const email = user.email;
     var music_user = db.collection('users').doc(email);
     // firestore update
-    music_user.update({email: email});
+    // music_user.update({email: email});
     if(parseInt(heart)) 
-      await music_user.update({ musics: FieldValue.arrayRemove(music) });
+      await music_user.set({ musics: FieldValue.arrayRemove(music) }, { merge: true });
     else 
-      await music_user.update({ musics: FieldValue.arrayUnion(music) });
+      await music_user.set({ musics: FieldValue.arrayUnion(music) }, { merge: true });
   }
   res.status(200).send(JSON.stringify({ status: "Successfully set heart" }));
 });
 
+app.get("/album", async(req, res) => {
+  const key = req.query.key;
+  const album = await local_musics.get_album(key);
+  res.render("pages/album", {album: album});
+});
 
 // Create and Deploy Your First Cloud Functions
 // https://firebase.google.com/docs/functions/write-firebase-functions
