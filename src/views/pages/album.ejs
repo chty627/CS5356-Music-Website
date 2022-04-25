@@ -45,21 +45,23 @@
                 </div>
             </nav>
 
-            <% Object.entries(data).forEach(function([key, music]) { %>
+            <% data.forEach(function(music, index) { %>
                 <div class="w-full md:w-1/3 xl:w-1/4 p-6 flex flex-col">
+                    <a href="#" onclick="send('<%= music.key %>', '<%= music.heart ? 1 : 0 %> ')">
                         <img class="hover:grow hover:shadow-lg"
                             src="<%= music.images.coverart %>">
                         <div class="pt-3 flex items-center justify-between">
                             <p class=""><%= music.title %></p>
-                            <button style="color:rgb(255, 65, 65);" onclick="send('<%= music.key %>', '<%= music.heart ? 1 : 0 %> ')">
+                            <span style="color:rgb(255, 65, 65);" >
                                 <% if (music.heart) {%> 
                                     <i class="fa-solid fa-heart"></i>
                                 <%} else { %> 
                                     <i class="fa-regular fa-heart"></i>
                                 <% } %> 
-                            </button>
+                            </span>
                         </div>
                         <p class="pt-1 text-gray-900"><%= music.subtitle %></p>
+                    </a>
                 </div>
             <% }) %>
 
@@ -76,10 +78,15 @@
 <script>
     async function send(music, heart) {
         console.log(music);
-        const res = await fetch('/setHeart', {
+        const res = fetch('/setHeart', {
             method: 'post',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ music , heart})
+          }).then(() => {
+            console.log("Successful add" + music);
+            
+          }).catch((err) => {
+              console.log(err);
           });
         window.location.reload();
           
