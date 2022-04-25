@@ -52,16 +52,21 @@ app.get("/", async function (req, res) {
   const musics = Object.values(m.tracks);
 
   const db = admin.firestore();
-  const user = await admin.auth().verifySessionCookie(req.cookies.session, true);
-  if(user){
-    const email = user.email;
-    var music_user = db.collection('users').doc(email);
-    const data_for_user = await music_user.get();
-    const music_for_user = data_for_user.data().musics;
-    // add heart
-    for(var i = 0; i < musics.length; i++){
-      musics[i]["heart"] =  music_for_user.includes(musics[i].key);
+  if (req.cookies.session){
+    const user = await admin.auth().verifySessionCookie(req.cookies.session, true);
+    if(user){
+      const email = user.email;
+      var music_user = db.collection('users').doc(email);
+      const data_for_user = await music_user.get();
+      if (data_for_user.data()){
+        // add heart
+        const music_for_user = data_for_user.data().musics;
+        for(var i = 0; i < musics.length; i++){
+          musics[i]["heart"] =  music_for_user.includes(musics[i].key);
+        }
+      }
     }
+  
   }
   res.render("pages/index", { data: musics });
 });
@@ -105,7 +110,9 @@ app.get("/dashboard", authMiddleware, async function (req, res) {
   const email = user.email;
   var music_user = db.collection('users').doc(email);
   const data_for_user = await music_user.get();
-  const music_for_user = data_for_user.data().musics;
+
+  let music_for_user = [];
+  if (data_for_user.data()) {music_for_user = data_for_user.data().musics;}
 
   var filtered = musics.filter(function(value, index, arr){ 
     return music_for_user.includes(value.key);
@@ -159,6 +166,7 @@ app.post("/setHeart", async (req, res) => {
   if(user){
     const email = user.email;
     var music_user = db.collection('users').doc(email);
+    console.log(music_user);
     music_user.update({email: email});
     var h = parseInt(heart);
     if(h){
@@ -183,6 +191,14 @@ app.post("/setHeart", async (req, res) => {
 
 // exports.helloWorld = functions.https.onRequest(app);
 
+
+// React api
+const cors = require('cors');
+app.get('/api/userprofile', cors(), async (req, res) => {
+  const user = await admin.auth().verifySessionCookie(req.cookies.session, true);
+  console.log(user);
+  res.json(user);
+});
 
 app.listen(port);
 console.log("Server started at http://localhost:" + port);
