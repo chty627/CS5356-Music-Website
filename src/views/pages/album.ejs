@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <%- include('../partials/head') %>
+        <!-- Include any custom css classes that you want available on this page here -->
+</head>
+
+<body>
+    <header>
+        <%- include('../partials/nav') %>
+    </header>
+
+
+    <body class="font-sans antialiased text-gray-900 backdrop-blur-md leading-normal tracking-wider bg-cover bg-no-repeat bg-opacity-25" 
+        style="background-image: url('<%= album.images.background %>');">
+        <div class="max-w-4xl flex items-center h-auto lg:h-screen flex-wrap mx-auto my-32 lg:my-0">
+
+            <!--Main Col-->
+            <div id="profile"
+                class="w-full lg:w-1/2  rounded-lg shadow-2xl bg-white opacity-75 mx-6 lg:mx-0">
+                <div class="p-4 md:p-12 text-center lg:text-left">
+                    <!-- Image for mobile view-->
+                    <div class="block lg:hidden rounded-full shadow-xl mx-auto -mt-16 h-48 w-48 bg-cover bg-center"
+                        style="background-image: url('https://source.unsplash.com/MP0IUfwrn0A')"></div>
+                    <h1 class="text-3xl font-bold pt-8 lg:pt-0"> <%= album.title %> </h1>
+                    <div class="mx-auto lg:mx-0 w-4/5 pt-3 border-b-2 border-green-500 opacity-25"></div>
+                    <p class="pt-4 text-base font-bold flex items-center justify-center lg:justify-start">
+                        <%= album.subtitle %> 
+                    </p>
+                    <p class="pt-8 text-sm"> <%= album.share.text %>
+                    </p>
+                    <div class="pt-12 pb-8">
+                        <button class="bg-green-700 hover:bg-green-900 text-white font-bold py-2 px-4 rounded-full">
+                            <i class="fa-solid fa-play"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!--Img Col-->
+            <div class="w-full lg:w-1/2">
+                <!-- Big profile image for side bar (desktop) -->
+                <img src="<%= album.images.coverart %> "
+                    class="rounded-none lg:rounded-lg shadow-2xl hidden lg:block">
+            </div>
+        </div>
+
+    </body>
+
+</body>
+
+
+</html>
+
+
+<script>
+</script>

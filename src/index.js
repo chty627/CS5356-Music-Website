@@ -16,6 +16,11 @@ const { getFirestore, Timestamp, FieldValue, doc, getDoc, setDoc} = require('fir
 
 
 
+
+// memory
+var local_musics = require("./app/user-music");
+
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
@@ -39,33 +44,24 @@ app.use("/static", express.static("static/"));
 // use res.render to load up an ejs view file
 // index page
 app.get("/", async function (req, res) {
-  const url = 'https://shazam.p.rapidapi.com/songs/list-recommendations?key=484129036&locale=en-US';
-  const options = {
-      method: 'GET',
-      headers: {
-        'X-RapidAPI-Host': 'shazam.p.rapidapi.com',
-        'X-RapidAPI-Key': '577dc0b40bmsh6ea6fa79b9105aep161387jsn5ee36599a5f6'
-      }
-    };
-  const message = await fetch(url, options);
-  const m = await message.json();
-  const musics = Object.values(m.tracks);
-
   const db = admin.firestore();
-  const user = await admin.auth().verifySessionCookie(req.cookies.session, true);
-  if(user){
-    const email = user.email;
-    var music_user = db.collection('users').doc(email);
-    const data_for_user = await music_user.get();
-    let music_for_user = []
-    if (data_for_user.data()) {music_for_user = data_for_user.data().musics;}
-
-      // add heart
-    for(var i = 0; i < musics.length; i++){
-      musics[i]["heart"] =  music_for_user.includes(musics[i].key);
-    }
+  const sessionCookie = req.cookies.session || "";
+  var musics_for_user = {};
+  if(sessionCookie == ""){
+    // no user: get musics
+    muscis_for_user = await local_musics.get();
   }
-  res.render("pages/index", { data: musics });
+  else{
+    // Firestore: get user & user's music list
+    const user = await admin.auth().verifySessionCookie(sessionCookie, true);
+    const email = user.email;
+    const music_user = db.collection('users').doc(email);
+    const data_for_user = await music_user.get();
+    const user_list = data_for_user.data().musics;
+    // Change local list
+    musics_for_user = await local_musics.userlist(user_list);
+  }
+  res.render("pages/index", { data: musics_for_user });
 });
 
 app.get("/sign-in", function (req, res) {
@@ -77,47 +73,15 @@ app.get("/sign-up", function (req, res) {
 });
 
 app.get("/dashboard", authMiddleware, async function (req, res) {
-
-  const url = 'https://shazam.p.rapidapi.com/songs/list-recommendations?key=484129036&locale=en-US';
-  const options = {
-      method: 'GET',
-      headers: {
-        'X-RapidAPI-Host': 'shazam.p.rapidapi.com',
-        'X-RapidAPI-Key': '577dc0b40bmsh6ea6fa79b9105aep161387jsn5ee36599a5f6'
-      }
-    };
-  const message = await fetch(url, options);
-  const m = await message.json();
-  const musics = Object.values(m.tracks);
-
-  // const url = 'https://shazam.p.rapidapi.com/songs/list-artist-top-tracks?id=40008598&locale=en-US';
-  // const options = {
-  //   method: 'GET',
-  //   headers: {
-  //     'X-RapidAPI-Host': 'shazam.p.rapidapi.com',
-  //     'X-RapidAPI-Key': '577dc0b40bmsh6ea6fa79b9105aep161387jsn5ee36599a5f6'
-  //   }
-  // };
-  // const message = await fetch(url, options);
-  // const m = await message.json();
-  // const music = Object.values(m.tracks);
-  // console.log(music);
+  // get firestore
   const db = admin.firestore();
   const user = await admin.auth().verifySessionCookie(req.cookies.session, true);
   const email = user.email;
   var music_user = db.collection('users').doc(email);
   const data_for_user = await music_user.get();
-  let music_for_user = []
-  if (data_for_user.data()) {music_for_user = data_for_user.data().musics;}
-
-  var filtered = musics.filter(function(value, index, arr){ 
-    return music_for_user.includes(value.key);
-  });
-  // add heart
-  for(var i = 0; i < filtered.length; i++){
-    filtered[i]["heart"] = true;
-  }
-  res.render("pages/dashboard", { data : filtered });
+  const user_list = data_for_user.data().musics;
+  var musics_for_user = await local_musics.get_user(user_list);
+  res.render("pages/dashboard", { data : musics_for_user});
 });
 
 // app.get("/afterlogin", function (req, res) {
@@ -149,33 +113,37 @@ app.get("/sessionLogout", (req, res) => {
 });
 
 
+// Pure backend
 
 app.post("/setHeart", async (req, res) => {
+  // edit firestore
   const db = admin.firestore();
   const music = req.body.music;
   const heart = req.body.heart;
-  const user = await admin.auth().verifySessionCookie(req.cookies.session, true);
-  if(user){
+  const sessionCookie = req.cookies.session || "";
+  if(sessionCookie == ""){
+    res.redirect("/sign-in");
+  }
+  else{
+    // find current user's database
+    const user = await admin.auth().verifySessionCookie(req.cookies.session, true);
     const email = user.email;
     var music_user = db.collection('users').doc(email);
-    music_user.update({email: email});
-    var h = parseInt(heart);
-    if(h){
-      console.log("enter true");
-      music_user.update({
-        musics: FieldValue.arrayRemove(music)
-    });
-    }
-    else{
-      console.log("enter false");
-      music_user.update({
-        musics: FieldValue.arrayUnion(music)
-    });
-    }
-    
+    // firestore update
+    // music_user.update({email: email});
+    if(parseInt(heart)) 
+      await music_user.set({ musics: FieldValue.arrayRemove(music) }, { merge: true });
+    else 
+      await music_user.set({ musics: FieldValue.arrayUnion(music) }, { merge: true });
   }
+  res.status(200).send(JSON.stringify({ status: "Successfully set heart" }));
 });
 
+app.get("/album", async(req, res) => {
+  const key = req.query.key;
+  const album = await local_musics.get_album(key);
+  res.render("pages/album", {album: album});
+});
 
 app.get("/userprofile", async function(req, res) {
   const db = admin.firestore();
