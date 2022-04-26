@@ -6,15 +6,15 @@ const admin = require("firebase-admin");
 const fetch = require('node-fetch');
 const app = express();
 const port = process.env.PORT || 8080;
-
 const serviceAccount = require("./../config/serviceAccountKey.json");
 const userFeed = require("./app/user-feed");
 const authMiddleware = require("./app/auth-middleware");
-
 const functions = require("firebase-functions");
 
-const { initializeApp, applicationDefault, cert } = require('firebase-admin/app');
-const { getFirestore, Timestamp, FieldValue } = require('firebase-admin/firestore');
+const {initializeApp, applicationDefault, cert } = require('firebase-admin/app');
+const { getFirestore, Timestamp, FieldValue, doc, getDoc, setDoc} = require('firebase-admin/firestore');
+
+
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -57,8 +57,10 @@ app.get("/", async function (req, res) {
     const email = user.email;
     var music_user = db.collection('users').doc(email);
     const data_for_user = await music_user.get();
-    const music_for_user = data_for_user.data().musics;
-    // add heart
+    let music_for_user = []
+    if (data_for_user.data()) {music_for_user = data_for_user.data().musics;}
+
+      // add heart
     for(var i = 0; i < musics.length; i++){
       musics[i]["heart"] =  music_for_user.includes(musics[i].key);
     }
@@ -105,7 +107,8 @@ app.get("/dashboard", authMiddleware, async function (req, res) {
   const email = user.email;
   var music_user = db.collection('users').doc(email);
   const data_for_user = await music_user.get();
-  const music_for_user = data_for_user.data().musics;
+  let music_for_user = []
+  if (data_for_user.data()) {music_for_user = data_for_user.data().musics;}
 
   var filtered = musics.filter(function(value, index, arr){ 
     return music_for_user.includes(value.key);
@@ -145,10 +148,6 @@ app.get("/sessionLogout", (req, res) => {
   res.redirect("/sign-in");
 });
 
-app.post("/dog-messages", authMiddleware, async (req, res) => {
-  await userFeed.add(req.user, req.body.message);
-  res.redirect("/dashboard");
-});
 
 
 app.post("/setHeart", async (req, res) => {
@@ -177,6 +176,46 @@ app.post("/setHeart", async (req, res) => {
   }
 });
 
+
+app.get("/userprofile", async function(req, res) {
+  const db = admin.firestore();
+  const user = await admin.auth().verifySessionCookie(req.cookies.session, true);
+  if (user){
+    const email = user.email;
+    const docRef = db.collection("userinfo").doc(email);
+    const docSnap = await docRef.get();
+    console.log(docSnap.data());
+    let bio = "";
+    let username = "";
+    if (docSnap.data()) {
+      bio = docSnap.data().bio;
+      username = docSnap.data().username;
+    } 
+    else {
+      await docRef.set({bio: "", username: ""}, {merge: true});
+    }
+    console.log({email, username, bio});
+    res.render("pages/userprofile", {email, username, bio});
+  }
+  else{
+    res.redirect("/sign-in");
+  }
+}); 
+
+
+
+app.post("/updateprofile", async (req, res) => {
+  const db = admin.firestore();
+  const bio = req.body.Bio;
+  const name = req.body.name;
+  const user = await admin.auth().verifySessionCookie(req.cookies.session, true);
+  if(user){
+    const email = user.email;
+    const docRef = db.collection("userinfo").doc(email);
+    console.log({bio, name});
+    await docRef.set({bio: bio, username: name}, {merge: true});
+  }
+});
 
 // Create and Deploy Your First Cloud Functions
 // https://firebase.google.com/docs/functions/write-firebase-functions
