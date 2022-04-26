@@ -45,7 +45,7 @@ app.use("/static", express.static("static/"));
 // index page
 app.get("/", async function (req, res) {
   const db = admin.firestore();
-  const sessionCookie = req.cookies.session || "";
+  const sessionCookie = req.cookies.__session || "";
   var musics_for_user = {};
   if(sessionCookie == ""){
     // no user: get musics
@@ -57,7 +57,12 @@ app.get("/", async function (req, res) {
     const email = user.email;
     const music_user = db.collection('users').doc(email);
     const data_for_user = await music_user.get();
-    const user_list = data_for_user.data().musics;
+
+    let user_list = [];
+    if (data_for_user.data()){
+      user_list = data_for_user.data().musics;
+    }
+
     // Change local list
     musics_for_user = await local_musics.userlist(user_list);
   }
@@ -75,7 +80,7 @@ app.get("/sign-up", function (req, res) {
 app.get("/dashboard", authMiddleware, async function (req, res) {
   // get firestore
   const db = admin.firestore();
-  const user = await admin.auth().verifySessionCookie(req.cookies.session, true);
+  const user = await admin.auth().verifySessionCookie(req.cookies.__session, true);
   const email = user.email;
   var music_user = db.collection('users').doc(email);
   const data_for_user = await music_user.get();
@@ -96,7 +101,7 @@ app.post("/sessionLogin", async (req, res) => {
     .then(
       sessionCookie => {
         const options = { maxAge: expiresIn, httpOnly: true};
-        res.cookie("session", sessionCookie, options);
+        res.cookie("__session", sessionCookie, options);
         res.status(200).send(JSON.stringify({ status: "success" }));
         
       },
@@ -108,7 +113,7 @@ app.post("/sessionLogin", async (req, res) => {
 });
 
 app.get("/sessionLogout", (req, res) => {
-  res.clearCookie("session");
+  res.clearCookie("__session");
   res.redirect("/sign-in");
 });
 
@@ -120,13 +125,13 @@ app.post("/setHeart", async (req, res) => {
   const db = admin.firestore();
   const music = req.body.music;
   const heart = req.body.heart;
-  const sessionCookie = req.cookies.session || "";
+  const sessionCookie = req.cookies.__session || "";
   if(sessionCookie == ""){
     res.redirect("/sign-in");
   }
   else{
     // find current user's database
-    const user = await admin.auth().verifySessionCookie(req.cookies.session, true);
+    const user = await admin.auth().verifySessionCookie(req.cookies.__session, true);
     const email = user.email;
     var music_user = db.collection('users').doc(email);
     // firestore update
@@ -147,7 +152,7 @@ app.get("/album", async(req, res) => {
 
 app.get("/userprofile", async function(req, res) {
   const db = admin.firestore();
-  const user = await admin.auth().verifySessionCookie(req.cookies.session, true);
+  const user = await admin.auth().verifySessionCookie(req.cookies.__session, true);
   if (user){
     const email = user.email;
     const docRef = db.collection("userinfo").doc(email);
@@ -176,7 +181,7 @@ app.post("/updateprofile", async (req, res) => {
   const db = admin.firestore();
   const bio = req.body.Bio;
   const name = req.body.name;
-  const user = await admin.auth().verifySessionCookie(req.cookies.session, true);
+  const user = await admin.auth().verifySessionCookie(req.cookies.__session, true);
   if(user){
     const email = user.email;
     const docRef = db.collection("userinfo").doc(email);
@@ -188,8 +193,12 @@ app.post("/updateprofile", async (req, res) => {
 // Create and Deploy Your First Cloud Functions
 // https://firebase.google.com/docs/functions/write-firebase-functions
 
-// exports.helloWorld = functions.https.onRequest(app);
+exports.app = functions.https.onRequest(app);
 
 
-app.listen(port);
-console.log("Server started at http://localhost:" + port);
+// app.listen(port);
+// console.log("Server started at http://localhost:" + port);
+
+
+
+
