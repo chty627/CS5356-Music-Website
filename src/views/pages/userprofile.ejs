@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <%- include('../partials/head') %>
+</head>
+
+
+
+<body>
+  <header>
+    <%- include('../partials/nav') %>
+  </header>
+
+  <main class="h-screen overflow-hidden flex items-center justify-center" style="background: #edf2f7;">
+
+  <div class="h-full">
+  
+    <div class="w-full border-b-2 block md:flex">
+
+      <div class="w-full md:w-2/5 p-4 sm:p-6 lg:p-8 bg-white shadow-md">
+        <div class="flex justify-between">
+          <span class="text-xl font-semibold block">Profile</span>
+          <button id='edit' onclick="onClickEdit()" class="-mt-2 text-md font-bold text-white bg-gray-700 rounded-full px-5 py-2 hover:bg-gray-800">Edit</button>
+        </div>
+
+        <div class="w-full p-8 mx-2 flex justify-center">
+          <img id="showImage" class="max-w-xs w-32 items-center border" src="https://images.unsplash.com/photo-1477118476589-bff2c5c4cfbb?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=200&q=200" alt="">
+          </div>
+        <span class="font-semibold">UserName: </span>
+        <% if (username) {%>
+        <span><%= username %></span>
+        <%} else { %>
+        <span>null</span>
+        <%}%>
+        <br />
+
+        <span class="font-semibold">Email: </span>
+        <span><%= email %></span>
+        <br />
+
+        <span class="font-semibold">Bio: </span>
+        <% if (bio) {%>
+        <span><%= bio %></span>
+        <%} else { %>
+        <span>null</span>
+         <%}%>
+        <br />
+      </div>
+      
+      <div class="w-full md:w-3/5 p-8 bg-white lg:ml-4 shadow-md">
+        <div class="rounded  shadow p-6">
+          <form id="edit-form">
+
+            <div class="pb-6">
+              <label for="name" class="font-semibold text-gray-700 block pb-1">Name</label>
+              <div class="flex">
+                <input disabled id="username" class="border-b-4 rounded-r px-4 py-2 w-full" type="text" value="" />
+              </div>
+            </div>
+
+            <div class="pb-4">
+              <label for="Bio" class="font-semibold text-gray-700 block pb-1">Bio</label>
+              <input disabled id="Bio" class="border-b-4 rounded-r px-4 py-2 w-full" type="text" value="" />
+            </div>
+
+            <button disabled id="submit" class="-mt-2 text-md font-bold text-white rounded-full px-5 py-2 text-slate-400" type="submit">Submit</button>
+
+         </form>
+        </div>
+      </div>
+
+    </div>
+  
+  </div>
+  </main>
+</body>
+</html>
+
+
+<script>
+
+  function onClickEdit() {
+        document.getElementById("username").disabled = !document.getElementById("username").disabled;
+        document.getElementById("Bio").disabled = !document.getElementById("Bio").disabled;
+
+        if (!document.getElementById("submit").disabled){
+          document.getElementById("submit").classList.remove("bg-gray-700");
+          document.getElementById("submit").classList.remove("hover:bg-gray-800");
+          document.getElementById("submit").classList.add("text-slate-400");
+        }
+        else{
+          document.getElementById("submit").classList.add("bg-gray-700");
+          document.getElementById("submit").classList.add("hover:bg-gray-800");
+          document.getElementById("submit").classList.remove("text-slate-400");
+        }
+
+        document.getElementById("submit").disabled = !document.getElementById("submit").disabled;
+
+    }
+
+    document
+      .getElementById("edit-form")
+      .addEventListener("submit", (event) => {
+        event.preventDefault();
+        const name = event.target.username.value;
+        const Bio = event.target.Bio.value;
+        console.log({name, Bio});
+
+        const res = fetch('/updateprofile', {
+            method: 'post',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ name, Bio })
+          }).then(() => {
+            console.log("Successful add" + { name, Bio });
+            window.location.reload();
+          }).catch((err) => {
+              console.log(err);
+          });
+          window.location.reload();
+      });
+  
+</script>

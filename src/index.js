@@ -6,14 +6,15 @@ const admin = require("firebase-admin");
 const fetch = require('node-fetch');
 const app = express();
 const port = process.env.PORT || 8080;
-
 const serviceAccount = require("./../config/serviceAccountKey.json");
 const userFeed = require("./app/user-feed");
 const authMiddleware = require("./app/auth-middleware");
 const functions = require("firebase-functions");
 
-const { initializeApp, applicationDefault, cert } = require('firebase-admin/app');
-const { getFirestore, Timestamp, FieldValue } = require('firebase-admin/firestore');
+const {initializeApp, applicationDefault, cert } = require('firebase-admin/app');
+const { getFirestore, Timestamp, FieldValue, doc, getDoc, setDoc} = require('firebase-admin/firestore');
+
+
 
 
 // memory
@@ -142,6 +143,46 @@ app.get("/album", async(req, res) => {
   const key = req.query.key;
   const album = await local_musics.get_album(key);
   res.render("pages/album", {album: album});
+});
+
+app.get("/userprofile", async function(req, res) {
+  const db = admin.firestore();
+  const user = await admin.auth().verifySessionCookie(req.cookies.session, true);
+  if (user){
+    const email = user.email;
+    const docRef = db.collection("userinfo").doc(email);
+    const docSnap = await docRef.get();
+    console.log(docSnap.data());
+    let bio = "";
+    let username = "";
+    if (docSnap.data()) {
+      bio = docSnap.data().bio;
+      username = docSnap.data().username;
+    } 
+    else {
+      await docRef.set({bio: "", username: ""}, {merge: true});
+    }
+    console.log({email, username, bio});
+    res.render("pages/userprofile", {email, username, bio});
+  }
+  else{
+    res.redirect("/sign-in");
+  }
+}); 
+
+
+
+app.post("/updateprofile", async (req, res) => {
+  const db = admin.firestore();
+  const bio = req.body.Bio;
+  const name = req.body.name;
+  const user = await admin.auth().verifySessionCookie(req.cookies.session, true);
+  if(user){
+    const email = user.email;
+    const docRef = db.collection("userinfo").doc(email);
+    console.log({bio, name});
+    await docRef.set({bio: bio, username: name}, {merge: true});
+  }
 });
 
 // Create and Deploy Your First Cloud Functions
