@@ -84,14 +84,13 @@ app.get("/dashboard", authMiddleware, async function (req, res) {
   const email = user.email;
   var music_user = db.collection('users').doc(email);
   const data_for_user = await music_user.get();
-  const user_list = data_for_user.data().musics;
+  let user_list = []
+  if (data_for_user.data()){
+    user_list = data_for_user.data().musics;
+  }
   var musics_for_user = await local_musics.get_user(user_list);
   res.render("pages/dashboard", { data : musics_for_user});
 });
-
-// app.get("/afterlogin", function (req, res) {
-//     res.render("pages/afterlogin");
-// });
 
 app.post("/sessionLogin", async (req, res) => {
   const idToken = req.body.idToken;
