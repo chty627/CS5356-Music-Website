@@ -1,5 +1,7 @@
 # Milestone 1 Project: Ruffhouse
 
+Course Project in Cornell Tech (cn257)
+
 Refer to the assignment for most of the details of the project
 
 ## Usage
